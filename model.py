@@ -19,17 +19,17 @@ os.makedirs(args.out, exist_ok=True)
 SUF = "" if args.lang == "en" else "_tr"
 outpath = lambda name: os.path.join(args.out, name)
 L = {
-    "en": dict(months3=[(3, "March"), (6, "June"), (12, "December")], pv_supply="PV supply", demand="DWPT demand",
+    "en": dict(months3=[(3, "March"), (6, "June"), (12, "December")], pv_supply="PV supply", demand="DWC energy demand",
                hour="Hour of day", e_hour="Energy (kWh/h)", pv_gen="PV generation",
                months=["J","F","M","A","M","J","J","A","S","O","N","D"], e_month="Energy (kWh/month)",
-               bat=lambda n: "No storage" if n == 0 else f"Stationary battery = {n}% of mean daily demand",
-               pv_size="PV size / annual net-zero size (–)", ss="Self-sufficiency (%)"),
-    "tr": dict(months3=[(3, "Mart"), (6, "Haziran"), (12, "Aralık")], pv_supply="PV üretimi", demand="DKGA enerji ihtiyacı",
+               bat=lambda n: "No storage" if n == 0 else f"Storage = {n}% of mean daily demand",
+               pv_size="PV size / required PV size (–)", ss="Share of demand met by PV (%)"),
+    "tr": dict(months3=[(3, "Mart"), (6, "Haziran"), (12, "Aralık")], pv_supply="PV üretimi", demand="Dinamik kablosuz şarj enerji ihtiyacı",
                hour="Günün saati", e_hour="Enerji (kWh/sa)", pv_gen="PV üretimi",
                months=["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"], e_month="Enerji (kWh/ay)",
                bat=lambda n: "Depolama yok" if n == 0 else
-                   f"Sabit batarya = ortalama günlük ihtiyacın %{n}" + {25: "'i", 50: "'si", 100: "'ü"}[n],
-               pv_size="PV gücü / net sıfır PV gücü (–)", ss="Öz yeterlilik (%)"),
+                   f"Depolama = ortalama günlük ihtiyacın %{n}" + {25: "'i", 50: "'si", 100: "'ü"}[n],
+               pv_size="PV gücü / gerekli PV gücü (–)", ss="PV karşılama oranı (%)"),
 }[args.lang]
 
 P = dict(
@@ -151,7 +151,7 @@ x = np.arange(12); w = .38
 ax.bar(x - w/2, mon.pv, w, color=C2, label=L["pv_gen"])
 ax.bar(x + w/2, mon.d, w, color=C1, label=L["demand"])
 ax.set_xticks(x, L["months"]); ax.set_ylabel(L["e_month"])
-ax.legend(frameon=False); ax.spines[["top","right"]].set_visible(False)
+ax.legend(frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2); ax.spines[["top","right"]].set_visible(False)
 fig.tight_layout(); fig.savefig(outpath(f"fig2_monthly{SUF}.png"), dpi=300)
 # Fig3 sensitivity
 fig, ax = plt.subplots(figsize=(5, 3.2))

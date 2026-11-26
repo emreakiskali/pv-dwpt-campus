@@ -1,7 +1,7 @@
 # pv-dwpt-campus
 
 Hourly, year-long comparison of photovoltaic (PV) generation with the energy required by a
-dynamic wireless power transfer (DWPT) system for electric vehicles on a university campus
+dynamic wireless charging (DWC) system for electric vehicles on a university campus
 (Marmara University, Göztepe Campus, Istanbul).
 
 This repository contains the model behind the conference paper
@@ -32,9 +32,9 @@ Outputs are written to `results/` (change with `--out`):
 | File | Content |
 |---|---|
 | `results.json` | All inputs and all numerical results |
-| `fig1_profiles.png` | Mean weekday PV generation and DWPT energy demand in March, June and December |
-| `fig2_monthly.png` | Monthly PV generation and DWPT energy demand for the annual net-zero PV size |
-| `fig3_sensitivity.png` | Self-sufficiency versus PV size and battery capacity |
+| `fig1_profiles.png` | Mean weekday PV generation and DWC energy demand in March, June and December |
+| `fig2_monthly.png` | Monthly PV generation and DWC energy demand for the required PV size |
+| `fig3_sensitivity.png` | Share of demand met by PV (self-sufficiency) versus PV size and storage capacity |
 
 `--lang` only changes the figure labels. The numerical results do not depend on it.
 `--sky` selects the model that converts horizontal irradiance to the tilted PV plane
@@ -43,7 +43,7 @@ With these three models the self-sufficiency results differ by at most about one
 
 ## What the model does
 
-1. **DWPT energy demand.** The energy delivered to vehicles in a published SUMO scenario is
+1. **DWC energy demand.** The energy delivered to vehicles in a published SUMO scenario is
    divided by the number of vehicles and the transfer efficiency, which gives the grid-side
    energy per vehicle passage. This is multiplied by the number of vehicles in each hour of the
    year and by the EV share.
@@ -58,14 +58,15 @@ With these three models the self-sufficiency results differ by at most about one
    is closest to the value implied by the published yield and performance ratio
    (1,311 / 0.812 ≈ 1,615 kWh/m²).
 3. **Hourly matching.** Demand and generation are compared hour by hour over 8,760 hours, with
-   and without a battery. Surplus PV charges the battery first and is exported afterwards;
-   deficits are drawn from the battery first and from the grid afterwards.
+   with and without storage (a stationary battery next to the PV system; vehicle batteries are
+   not modelled). Surplus PV charges the storage first and is exported afterwards; deficits are
+   drawn from the storage first and from the grid afterwards.
 4. **Sensitivity analysis.** Thirty synthetic years are generated in which each day's PV output is
    scaled by a random factor while monthly totals are kept unchanged.
 
 Reported indicators: annual energy demand, the PV size whose annual output equals annual demand
-("annual net-zero" size), self-sufficiency (share of demand met by PV, directly or through the
-battery) and self-consumption (share of PV output used by the DWPT system).
+("required PV size"), self-sufficiency (share of demand met by PV, directly or through the
+storage) and self-consumption (share of PV output used by the DWC system).
 
 ## Inputs and their sources
 
@@ -97,7 +98,7 @@ study and are stated here so that they can be replaced with measured data.
 | EV share scenarios | 10, 25, 50, 100% |
 | PV tilt / azimuth | 30° / south |
 | Panel area per unit capacity | 5.0 m²/kWp |
-| Battery round-trip efficiency / depth of discharge | 90% / 90% |
+| Storage (stationary battery) round-trip efficiency / depth of discharge | 90% / 90% |
 | Daily coefficient of variation of PV output in the sensitivity analysis | 0.45 (winter) to 0.12 (summer), by month |
 
 Further simplifications: the energy per vehicle comes from a single 600-s peak-hour SUMO
@@ -150,3 +151,7 @@ python model.py --lang tr
 
 Saatlik trafik profili ile hafta sonu ve yaz tatili katsayıları ölçüme değil varsayıma
 dayanmaktadır; tüm varsayımlar yukarıdaki "Assumptions" tablosunda listelenmiştir.
+
+Bildiride kullanılan Türkçe terimler: *PV karşılama oranı* (self-sufficiency, öz yeterlilik),
+*yerinde kullanım oranı* (self-consumption, öz tüketim), *gerekli PV gücü* (yıllık üretimi yıllık
+ihtiyaca eşit olan PV gücü) ve *depolama* (PV sisteminin yanına kurulan sabit batarya).
