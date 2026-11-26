@@ -13,6 +13,10 @@ This repository contains the model behind the conference paper
 The model is a single script. It is intentionally simple: every input is listed at the top of
 `model.py`, and running the script regenerates every number and figure reported in the paper.
 
+**Interactive version:** https://emreakiskali.github.io/pv-dwpt-campus/ runs the same model in the
+browser, with an animated view of the campus road network, the charging strips, PV generation and
+storage. Its sources are in [`app/`](app/README.md) and the built page is `docs/index.html`.
+
 ## Quick start
 
 ```bash

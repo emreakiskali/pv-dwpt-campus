@@ -9,3 +9,7 @@ venv/
 
 # outputs of the sensitivity runs (python model.py --sky ... --out results_*)
 results_*/
+
+# app build output of export_data.py
+app/_run/
+app/data.json.tmp

@@ -1,0 +1,440 @@
+<title>Göztepe Güneş ve Şarj</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working instrument. Controls on top, the campus as a live scene beside the day's energy flows, the year below. */
+:root{
+  --bg:#EDF1EC; --surface:#F9FBF8; --ink:#14201A; --muted:#56665C; --line:#D2DBD3; --chip:#E3E9E2;
+  --pv:#B9770E; --need:#1670B8; --store:#C2417A; --grid:#6E7A73; --strip:#0E9FB0;
+  --day-ground:#D6E5CF; --night-ground:#14211C; --day-road:#55615A; --night-road:#33433C; --car:#8A958E;
+  --seq0:#F3E9D6; --seq1:#B9770E;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0D1411; --surface:#141E19; --ink:#E4EDE6; --muted:#9AAAA0; --line:#26332D; --chip:#1E2A24;
+  --pv:#B98020; --need:#3E8FD6; --store:#DC5E93; --grid:#8E9A93; --strip:#2CC3D3;
+  --day-ground:#2A3B31; --night-ground:#0A110E; --day-road:#7E8C84; --night-road:#2B3933; --car:#6F7B74;
+  --seq0:#2A2418; --seq1:#E0A030; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0D1411; --surface:#141E19; --ink:#E4EDE6; --muted:#9AAAA0; --line:#26332D; --chip:#1E2A24;
+  --pv:#B98020; --need:#3E8FD6; --store:#DC5E93; --grid:#8E9A93; --strip:#2CC3D3;
+  --day-ground:#2A3B31; --night-ground:#0A110E; --day-road:#7E8C84; --night-road:#2B3933; --car:#6F7B74;
+  --seq0:#2A2418; --seq1:#E0A030; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--muted);max-width:64ch}
+.src{font-size:13px;color:var(--muted);text-align:right}
+.src a{color:var(--need)}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0}
+.label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{font:500 13px var(--body);color:var(--ink);background:var(--chip);border:1px solid transparent;border-radius:999px;padding:5px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible,.play:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--need);outline-offset:2px}
+.range{display:flex;align-items:center;gap:10px}
+input[type=range]{accent-color:var(--pv);width:150px}
+.hint{font-size:12px;color:var(--muted)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px}
+@media (max-width:880px){.hero{grid-template-columns:1fr}}
+.scene{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--night-ground)}
+.scene canvas{display:block;width:100%;height:auto;aspect-ratio:1.28}
+.scene .tag{position:absolute;left:12px;top:10px;font:500 12px var(--mono);color:#fff;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.panel{display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.clock{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.clock .t{font:500 34px var(--mono);font-variant-numeric:tabular-nums;line-height:1}
+.clock .d{color:var(--muted);font-size:13px}
+.play{font:600 13px var(--body);border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.reads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.read{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.read b{font:500 20px var(--mono);font-variant-numeric:tabular-nums}
+.read span{font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.flowtext{font-size:14px;min-height:42px}
+svg text{fill:var(--muted);font:11px var(--mono)}
+.timebar{display:flex;align-items:center;gap:10px}
+.timebar input{flex:1;width:auto}
+
+/* year */
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:880px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.tile b{font:500 26px var(--mono);font-variant-numeric:tabular-nums;line-height:1.15}
+.tile span{font-size:12.5px;color:var(--muted)}
+.charts{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:880px){.charts{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card p{margin:0;color:var(--muted);font-size:13.5px}
+.chartbox{position:relative;width:100%}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:12px var(--mono);padding:6px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);z-index:5}
+.notes{font-size:13px;color:var(--muted);max-width:90ch;display:flex;flex-direction:column;gap:6px}
+.notes a{color:var(--need)}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="label">Marmara Üniversitesi Göztepe Kampüsü · dinamik kablosuz şarj + PV</div>
+      <h1>Göztepe Güneş ve Şarj</h1>
+      <p class="lede">Kampüs yollarına gömülü şarj şeritlerinin enerji ihtiyacı ile kampüse kurulacak bir PV sisteminin üretimini saat saat karşılaştıran modelin etkileşimli sürümü. Ayarları değiştirdiğinizde bir yıllık (8.760 saat) hesap tarayıcıda yeniden yapılır.</p>
+    </div>
+    <div class="src">Model kodu: <a href="https://github.com/emreakiskali/pv-dwpt-campus" target="_blank" rel="noopener">github.com/emreakiskali/pv-dwpt-campus</a><br>Akıskalıoğlu (2026) · Zeugma 17. Kongresi</div>
+  </header>
+
+  <section class="controls" aria-label="Senaryo ayarları">
+    <div class="ctl"><span class="label">Yerleşim</span>
+      <div class="seg" id="c-layout"><button data-v="full">Tam kapsama · 3,81 km</button><button data-v="sel">Seçici · 0,39 km</button></div></div>
+    <div class="ctl"><span class="label">EV oranı</span>
+      <div class="seg" id="c-share"><button data-v="0.1">%10</button><button data-v="0.25">%25</button><button data-v="0.5">%50</button><button data-v="1">%100</button></div></div>
+    <div class="ctl"><span class="label">PV gücü</span>
+      <div class="range"><input id="c-mult" type="range" min="0.5" max="2" step="0.25" value="1" aria-label="PV gücü, gerekli PV gücüne oranla"><span class="num" id="c-mult-v"></span></div>
+      <span class="hint" id="c-mult-h"></span></div>
+    <div class="ctl"><span class="label">Depolama</span>
+      <div class="seg" id="c-days"><button data-v="0">Yok</button><button data-v="0.25">¼ gün</button><button data-v="0.5">½ gün</button><button data-v="1">1 gün</button></div>
+      <span class="hint" id="c-days-h"></span></div>
+    <div class="ctl"><span class="label">Gösterilen gün</span>
+      <div class="seg" id="c-month"></div>
+      <div class="seg" id="c-dtype"><button data-v="wd">Hafta içi</button><button data-v="we">Hafta sonu</button></div></div>
+  </section>
+
+  <section class="hero">
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <div class="scene"><canvas id="map" width="1280" height="1000" aria-label="Kampüs yol ağı, şarj şeritleri ve araçlar"></canvas><div class="tag" id="maptag"></div></div>
+      <div class="legend">
+        <span><i style="background:var(--strip)"></i>Şarj şeridi (ihtiyaçla parlar)</span>
+        <span><i style="background:#fff;border:1px solid var(--line)"></i>Elektrikli araç</span>
+        <span><i style="background:var(--car)"></i>Diğer araç</span>
+        <span><i style="background:var(--pv)"></i>PV alanı, ölçekli</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="clock">
+        <div><div class="t" id="clock">12:00</div><div class="d" id="date"></div></div>
+        <button class="play" id="play" aria-pressed="true">Duraklat</button>
+      </div>
+      <div class="timebar"><span class="label">Saat</span><input id="time" type="range" min="0" max="23.99" step="0.05" value="12" aria-label="Günün saati"></div>
+      <div class="reads">
+        <div class="read"><span><i class="dot" style="background:var(--pv)"></i>PV üretimi</span><b id="r-pv">–</b></div>
+        <div class="read"><span><i class="dot" style="background:var(--need)"></i>Şarj enerji ihtiyacı</span><b id="r-need">–</b></div>
+        <div class="read"><span><i class="dot" style="background:var(--store)"></i>Depolama doluluğu</span><b id="r-soc">–</b></div>
+        <div class="read"><span><i class="dot" style="background:var(--grid)"></i>Şebeke</span><b id="r-grid">–</b></div>
+      </div>
+      <div class="flowtext" id="flow"></div>
+      <div>
+        <div class="label" style="margin-bottom:4px">Gün boyunca (kWh/sa)</div>
+        <div class="chartbox" id="daybox"><svg id="day" viewBox="0 0 420 190" role="img" aria-label="Seçilen gün için saatlik PV üretimi ve şarj enerji ihtiyacı"></svg></div>
+        <div class="legend" style="margin-top:4px"><span><i style="background:var(--pv)"></i>PV üretimi</span><span><i style="background:var(--need)"></i>Şarj enerji ihtiyacı</span><span><i style="background:var(--store)"></i>Depolama doluluğu (%)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Bir yılın sonucu</h2>
+    <div class="tiles">
+      <div class="tile"><span>Yıllık şarj enerji ihtiyacı</span><b id="t-need">–</b><span id="t-need2"></span></div>
+      <div class="tile"><span>PV gücü / panel alanı</span><b id="t-kwp">–</b><span id="t-kwp2"></span></div>
+      <div class="tile"><span>PV karşılama oranı</span><b id="t-ss">–</b><span>ihtiyacın PV ile karşılanan payı</span></div>
+      <div class="tile"><span>Yerinde kullanım oranı</span><b id="t-sc">–</b><span>üretimin şarj sisteminde kullanılan payı</span></div>
+      <div class="tile"><span>Önlenen şebeke emisyonu</span><b id="t-co2">–</b><span>0,474 tCO₂/MWh ile</span></div>
+    </div>
+    <div class="charts">
+      <div class="card">
+        <h2>Aylık üretim ve ihtiyaç</h2>
+        <p id="m-note"></p>
+        <div class="chartbox" id="monbox"><svg id="mon" viewBox="0 0 560 250" role="img" aria-label="Aylık PV üretimi ve şarj enerji ihtiyacı"></svg></div>
+        <div class="legend"><span><i style="background:var(--pv)"></i>PV üretimi</span><span><i style="background:var(--need)"></i>Şarj enerji ihtiyacı</span></div>
+      </div>
+      <div class="card">
+        <h2>Yıl boyunca her gün</h2>
+        <p>Her kare bir gün; renk koyulaştıkça o günün ihtiyacının daha büyük kısmı PV ile karşılanıyor.</p>
+        <div class="chartbox" id="yearbox"><svg id="year" viewBox="0 0 640 120" role="img" aria-label="Günlük PV karşılama oranı, 365 gün"></svg></div>
+        <div class="legend" id="yearleg"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div><b>Nasıl çalışır?</b> Araç başına şebeke enerjisi, önceki SUMO çalışmasından (8 Mart 2024, 12:00–13:00, 103 araç, 10 kW, %90 verim) alınır ve varsayıma dayalı saatlik kampüs trafiğiyle (hafta sonu ×0,45, Temmuz–Ağustos ×0,50) bir yıla genişletilir. PV üretimi, Ekici (2016)'daki yatay düzlem aylık ışınım değerlerinden Hay–Davies modeliyle 30° güney yüzeyine aktarılmış ve 1.311 kWh/kWp yıllık üretime ölçeklenmiştir. Depolama, PV sisteminin yanına kurulan sabit bir bataryadır (%90 verim, %90 deşarj derinliği).</div>
+    <div><b>Haritada temsili olanlar:</b> Yol ağı ve şeritler, Akıskalıoğlu ve Atmaca (2026)'daki SUMO ağından çizilmiştir. Araç sayısı o saatin trafiğiyle orantılıdır ama tek tek araçlar temsilidir. PV alanı ölçeklidir, konumu temsilidir. Sayılar bildirideki değerlerle aynıdır: %100 EV ve tam kapsamada 55,8 MWh/yıl, 42,5 kWp ve PV karşılama oranı depolama olmadan %63,8.</div>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = __DATA__;
+const NET = __CAMPUS__;
+__MODEL__
+</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 1) => v.toLocaleString('tr-TR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 1) => '%' + fmt(v * 100, d);
+const MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const MONTHS_L = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const DAYS_L = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const C = buildCalendar(DATA), VEH = vehicles(DATA, C);
+const st = { layout: 'full', share: 1, mult: 1, days: 0, month: 5, dtype: 'wd', t: 12, playing: !reduce };
+let R = null, dayStart = 0;
+
+/* ---------- tokens ---------- */
+let T = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  T = { pv: g('--pv'), need: g('--need'), store: g('--store'), grid: g('--grid'), strip: g('--strip'), line: g('--line'), muted: g('--muted'), ink: g('--ink'),
+        dg: g('--day-ground'), ng: g('--night-ground'), dr: g('--day-road'), nr: g('--night-road'), car: g('--car'), s0: g('--seq0'), s1: g('--seq1'), surface: g('--surface') };
+}
+const hex = h => { h = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((x, i) => Math.round(x + (B[i] - x) * t)).join(',')})`; };
+
+/* ---------- controls ---------- */
+const monthSeg = $('c-month');
+MONTHS.forEach((m, i) => { const b = document.createElement('button'); b.textContent = m; b.dataset.v = i; monthSeg.appendChild(b); });
+function bindSeg(id, key, parse = v => v) {
+  const el = $(id);
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; st[key] = parse(b.dataset.v); syncSeg(); recompute(); });
+}
+function syncSeg() {
+  const map = { 'c-layout': st.layout, 'c-share': String(st.share), 'c-days': String(st.days), 'c-month': String(st.month), 'c-dtype': st.dtype };
+  for (const [id, v] of Object.entries(map)) $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+}
+bindSeg('c-layout', 'layout'); bindSeg('c-share', 'share', Number); bindSeg('c-days', 'days', Number); bindSeg('c-month', 'month', Number); bindSeg('c-dtype', 'dtype');
+$('c-mult').addEventListener('input', e => { st.mult = Number(e.target.value); recompute(); });
+$('time').addEventListener('input', e => { st.t = Number(e.target.value); setPlaying(false); drawLive(); });
+$('play').addEventListener('click', () => setPlaying(!st.playing));
+function setPlaying(p) { st.playing = p; $('play').textContent = p ? 'Duraklat' : 'Oynat'; $('play').setAttribute('aria-pressed', String(p)); }
+
+/* representative day: 3rd Wednesday or 3rd Saturday of the month (2026 calendar) */
+function pickDay() {
+  const want = st.dtype === 'wd' ? 2 : 5; let count = 0;
+  for (let h = 0; h < C.n; h += 24) if (C.month[h] === st.month && C.dow[h] === want && ++count === 3) return h;
+  return 0;
+}
+
+/* ---------- recompute ---------- */
+function recompute() {
+  R = simulate(DATA, C, VEH, st);
+  dayStart = pickDay();
+  const d = C.doy[dayStart] - [0,31,59,90,120,151,181,212,243,273,304,334][st.month] + 1;
+  $('date').textContent = `${d} ${MONTHS_L[st.month]} 2026, ${DAYS_L[C.dow[dayStart]]}`;
+  $('c-mult-v').textContent = '× ' + fmt(st.mult, 2);
+  $('c-mult-h').textContent = `${fmt(R.kWp, 1)} kWp · ≈ ${fmt(R.area, 0)} m²`;
+  $('c-days-h').textContent = st.days ? `${fmt(R.batKWh, 0)} kWh sabit batarya` : 'fazla üretim şebekeye verilir';
+  $('t-need').textContent = fmt(R.Dsum / 1000, 1) + ' MWh';
+  $('t-need2').textContent = `en yüksek ${fmt(R.peak, 1)} kWh/sa`;
+  $('t-kwp').textContent = fmt(R.kWp, 1) + ' kWp';
+  $('t-kwp2').textContent = `≈ ${fmt(R.area, 0)} m² · gerekli ${fmt(R.kWpReq, 1)} kWp`;
+  $('t-ss').textContent = pct(R.SS);
+  $('t-sc').textContent = pct(R.SC);
+  $('t-co2').textContent = fmt(R.SS * R.Dsum / 1000 * 0.474, 1) + ' t/yıl';
+  drawMonthly(); drawYear(); drawDay(); drawLive();
+}
+
+/* ---------- tooltip ---------- */
+const tip = $('tip');
+function showTip(box, x, y, html) { const r = box.getBoundingClientRect(); tip.innerHTML = html; tip.hidden = false;
+  tip.style.left = (r.left + window.scrollX + x) + 'px'; tip.style.top = (r.top + window.scrollY + y) + 'px'; }
+function hideTip() { tip.hidden = true; }
+function svgPoint(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent && parent.appendChild(n); return n; }
+function niceScale(v, n = 4) { const raw = v / n, p = Math.pow(10, Math.floor(Math.log10(raw))); let step = 10 * p; for (const m of [1, 2, 2.5, 5]) if (m * p >= raw) { step = m * p; break; }
+  const dec = step >= 1 ? 0 : Math.min(2, Math.ceil(-Math.log10(step))); return { max: step * Math.ceil(v / step - 1e-9), step, dec: step % 1 ? Math.max(dec, 1) : 0 }; }
+
+/* ---------- day chart ---------- */
+const daySvg = $('day'); let dayCursor = null;
+function drawDay() {
+  const W = 420, H = 190, l = 34, r = 8, t = 8, b = 52, socH = 22, ph = H - t - b;
+  daySvg.innerHTML = '';
+  const pv = [], dm = [], sc = [];
+  for (let k = 0; k < 24; k++) { pv.push(R.pv[dayStart + k]); dm.push(R.dem[dayStart + k]); sc.push(R.soc[dayStart + k]); }
+  const sc_ = niceScale(Math.max(...pv, ...dm, 0.001)), ymax = sc_.max;
+  const X = h => l + (W - l - r) * h / 23, Y = v => t + ph - ph * v / ymax;
+  for (let v = 0; v <= ymax + 1e-9; v += sc_.step) { const y = Y(v);
+    el('line', { x1: l, x2: W - r, y1: y, y2: y, stroke: T.line, 'stroke-width': 1 }, daySvg);
+    el('text', { x: l - 6, y: y + 3.5, 'text-anchor': 'end' }, daySvg).textContent = fmt(v, sc_.dec); }
+  [0, 6, 12, 18, 23].forEach(h => el('text', { x: X(h), y: t + ph + 14, 'text-anchor': 'middle' }, daySvg).textContent = String(h).padStart(2, '0') + ':00');
+  let a = `M${X(0)},${Y(0)}`; pv.forEach((v, h) => a += `L${X(h)},${Y(v)}`); a += `L${X(23)},${Y(0)}Z`;
+  el('path', { d: a, fill: T.pv, 'fill-opacity': .28, stroke: T.pv, 'stroke-width': 2, 'stroke-linejoin': 'round' }, daySvg);
+  let p = ''; dm.forEach((v, h) => p += (h ? 'L' : 'M') + X(h) + ',' + Y(v));
+  el('path', { d: p, fill: 'none', stroke: T.need, 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, daySvg);
+  // storage strip (own scale 0–100 %)
+  const sy = H - socH - 6;
+  el('text', { x: l - 6, y: sy + socH / 2 + 3.5, 'text-anchor': 'end' }, daySvg).textContent = '%';
+  el('rect', { x: l, y: sy, width: W - l - r, height: socH, fill: T.line, 'fill-opacity': .35, rx: 3 }, daySvg);
+  if (st.days > 0) { let s = `M${X(0)},${sy + socH}`; sc.forEach((v, h) => s += `L${X(h)},${sy + socH - socH * v}`); s += `L${X(23)},${sy + socH}Z`;
+    el('path', { d: s, fill: T.store, 'fill-opacity': .55, stroke: T.store, 'stroke-width': 1.5 }, daySvg); }
+  else el('text', { x: (l + W - r) / 2, y: sy + socH / 2 + 3.5, 'text-anchor': 'middle' }, daySvg).textContent = 'depolama yok';
+  dayCursor = el('line', { x1: 0, x2: 0, y1: t, y2: H - 6, stroke: T.ink, 'stroke-width': 1.2, 'stroke-dasharray': '3 3' }, daySvg);
+  const hit = el('rect', { x: l, y: t, width: W - l - r, height: H - t - 6, fill: 'transparent' }, daySvg);
+  hit.addEventListener('mousemove', e => { const q = svgPoint(daySvg, e), h = Math.max(0, Math.min(23, Math.round((q.x - l) / (W - l - r) * 23)));
+    const bx = daySvg.getBoundingClientRect(), sx = bx.width / W;
+    showTip($('daybox'), X(h) * sx, Y(Math.max(pv[h], dm[h])) * sx, `${String(h).padStart(2,'0')}:00<br>PV ${fmt(pv[h], 1)} · ihtiyaç ${fmt(dm[h], 1)} kWh` + (st.days ? `<br>depolama %${fmt(sc[h] * 100, 0)}` : '')); });
+  hit.addEventListener('mouseleave', hideTip);
+  daySvg._X = X;
+}
+
+/* ---------- monthly chart ---------- */
+const monSvg = $('mon');
+function drawMonthly() {
+  const W = 560, H = 262, l = 44, r = 8, t = 22, b = 26, ph = H - t - b; monSvg.innerHTML = '';
+  const rows = R.mon.map(m => ({ pv: m.pv / 1000, d: m.d / 1000 }));
+  const ms = niceScale(Math.max(...rows.map(x => Math.max(x.pv, x.d)))), ymax = ms.max;
+  const Y = v => t + ph - ph * v / ymax, cw = (W - l - r) / 12, bw = Math.min(16, cw / 2 - 3);
+  for (let v = 0; v <= ymax + 1e-9; v += ms.step) { const y = Y(v);
+    el('line', { x1: l, x2: W - r, y1: y, y2: y, stroke: T.line, 'stroke-width': 1 }, monSvg);
+    el('text', { x: l - 6, y: y + 3.5, 'text-anchor': 'end' }, monSvg).textContent = fmt(v, ms.dec); }
+  el('text', { x: l - 6, y: 10, 'text-anchor': 'end' }, monSvg).textContent = 'MWh';
+  rows.forEach((m, i) => { const cx = l + cw * i + cw / 2;
+    const bar = (v, x, c) => { const y = Y(v), h = t + ph - y, rr = Math.min(4, h, bw / 2);
+      el('path', { d: `M${x},${t + ph}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + bw - rr}Q${x + bw},${y} ${x + bw},${y + rr}V${t + ph}Z`, fill: c }, monSvg); };
+    bar(m.pv, cx - bw - 1, T.pv); bar(m.d, cx + 1, T.need);
+    el('text', { x: cx, y: H - 8, 'text-anchor': 'middle' }, monSvg).textContent = MONTHS[i];
+    const hit = el('rect', { x: l + cw * i, y: t, width: cw, height: ph, fill: 'transparent' }, monSvg);
+    hit.addEventListener('mousemove', () => { const sx = monSvg.getBoundingClientRect().width / W;
+      showTip($('monbox'), cx * sx, Y(Math.max(m.pv, m.d)) * sx, `${MONTHS_L[i]}<br>PV ${fmt(m.pv, 2)} · ihtiyaç ${fmt(m.d, 2)} MWh<br>PV / ihtiyaç %${fmt(m.pv / m.d * 100, 0)}`); });
+    hit.addEventListener('mouseleave', hideTip); });
+  const rat = R.mon.map(m => m.pv / m.d);
+  $('m-note').textContent = `PV üretiminin aylık ihtiyaca oranı Aralık'ta %${fmt(rat[11] * 100, 0)}, Haziran'da %${fmt(rat[5] * 100, 0)}. Temmuz ve Ağustos'ta trafik yarıya indiği için bu oran yükseliyor.`;
+}
+
+/* ---------- year strip ---------- */
+const yearSvg = $('year');
+function drawYear() {
+  const W = 640, l = 34, t = 4, cell = 11, gap = 1.6; yearSvg.innerHTML = '';
+  // 53 columns (weeks) x 7 rows (Mon..Sun)
+  const cols = Math.ceil((365 + DATA.dow0) / 7), cw = (W - l - 4) / cols, cs = Math.min(cw - gap, cell);
+  const H = t + 7 * (cs + gap) + 22; yearSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  ['Pzt', '', 'Çar', '', 'Cum', '', 'Paz'].forEach((d, i) => d && (el('text', { x: l - 5, y: t + i * (cs + gap) + cs - 1, 'text-anchor': 'end' }, yearSvg).textContent = d));
+  const mstart = [0,31,59,90,120,151,181,212,243,273,304,334];
+  R.day.forEach((dy, i) => { const k = i + DATA.dow0, col = Math.floor(k / 7), row = k % 7, v = dy.d > 0 ? dy.met / dy.d : 0;
+    const x = l + col * cw, y = t + row * (cs + gap);
+    const r = el('rect', { x, y, width: cs, height: cs, rx: 1.5, fill: mix(T.s0, T.s1, Math.min(1, v)) }, yearSvg);
+    r.addEventListener('mousemove', () => { const sx = yearSvg.getBoundingClientRect().width / W; let m = 11; while (mstart[m] > i) m--;
+      showTip($('yearbox'), (x + cs / 2) * sx, y * sx, `${i - mstart[m] + 1} ${MONTHS_L[m]} · ${DAYS_L[(i + DATA.dow0) % 7]}<br>PV karşılama %${fmt(v * 100, 0)}`); });
+    r.addEventListener('mouseleave', hideTip); });
+  mstart.forEach((s, m) => { const col = Math.floor((s + DATA.dow0) / 7); el('text', { x: l + col * cw, y: H - 6 }, yearSvg).textContent = MONTHS[m]; });
+  const lg = $('yearleg'); lg.innerHTML = '';
+  [0, .25, .5, .75, 1].forEach(v => { const s = document.createElement('span'); s.innerHTML = `<i style="background:${mix(T.s0, T.s1, v)}"></i>%${v * 100}`; lg.appendChild(s); });
+}
+
+/* ---------- campus scene ---------- */
+const cv = $('map'), ctx = cv.getContext('2d');
+const B = NET.bbox, pad = 46, VX0 = B[0] - pad, VY0 = B[1] - pad - 30, VW = B[2] - B[0] + 2 * pad, VH = B[3] - B[1] + 2 * pad + 30;
+const sx = cv.width / VW, sy = cv.height / VH, S = Math.min(sx, sy);
+const ox = (cv.width - VW * S) / 2, oy = (cv.height - VH * S) / 2;
+const P = (x, y) => [ox + (x - VX0) * S, oy + (y - VY0) * S];
+// graph for car routing: endpoints merged within 8 px
+const ends = new Map(); const key = p => `${Math.round(p[0] / 8)}:${Math.round(p[1] / 8)}`;
+const near = p => { const out = []; for (const [k, v] of ends) { const [a, b] = k.split(':').map(Number); if (Math.abs(a - Math.round(p[0] / 8)) <= 1 && Math.abs(b - Math.round(p[1] / 8)) <= 1) out.push(...v); } return out; };
+NET.paths.forEach((pa, i) => { const lens = [0]; for (let j = 1; j < pa.p.length; j++) lens.push(lens[j - 1] + Math.hypot(pa.p[j][0] - pa.p[j - 1][0], pa.p[j][1] - pa.p[j - 1][1])); pa.len = lens; pa.L = lens[lens.length - 1];
+  for (const [end, pt] of [[0, pa.p[0]], [1, pa.p[pa.p.length - 1]]]) { const k = key(pt); if (!ends.has(k)) ends.set(k, []); ends.get(k).push({ i, end }); } });
+function posOn(pa, s) { let j = 1; while (j < pa.len.length - 1 && pa.len[j] < s) j++; const a = pa.p[j - 1], b = pa.p[j], seg = (pa.len[j] - pa.len[j - 1]) || 1, u = Math.max(0, Math.min(1, (s - pa.len[j - 1]) / seg));
+  return { x: a[0] + (b[0] - a[0]) * u, y: a[1] + (b[1] - a[1]) * u, j }; }
+const cars = [];
+function spawn() { const i = Math.floor(Math.random() * NET.paths.length), pa = NET.paths[i], dir = Math.random() < .5 ? 1 : -1;
+  return { i, dir, s: Math.random() * pa.L, v: 26 + Math.random() * 18, ev: Math.random(), life: 0 }; }
+function stepCar(c, dt) {
+  const pa = NET.paths[c.i]; c.s += c.dir * c.v * dt;
+  if (c.s > pa.L || c.s < 0) { const endPt = c.s > pa.L ? pa.p[pa.p.length - 1] : pa.p[0];
+    const opts = near(endPt).filter(o => o.i !== c.i); const o = opts.length ? opts[Math.floor(Math.random() * opts.length)] : { i: c.i, end: c.s > pa.L ? 1 : 0 };
+    const np = NET.paths[o.i]; c.i = o.i; c.dir = o.end === 0 ? 1 : -1; c.s = o.end === 0 ? 0 : np.L; }
+}
+// static strip segments per layout
+function stripSegs(flag) { const out = []; NET.paths.forEach(pa => { for (let j = 1; j < pa.p.length; j++) if (pa[flag][j] && pa[flag][j - 1]) out.push([pa.p[j - 1], pa.p[j]]); }); return out; }
+const SEGS = { full: stripSegs('f'), sel: stripSegs('s') };
+
+function hourVals(t) { const h0 = Math.floor(t) % 24, h1 = (h0 + 1) % 24, u = t - Math.floor(t), A = dayStart + h0, Bh = dayStart + h1;
+  const L = (arr) => arr[A] + (arr[Math.min(Bh, C.n - 1)] - arr[A]) * (h1 === 0 ? 0 : u);
+  return { pv: L(R.pv), dem: L(R.dem), soc: L(R.soc), imp: L(R.imp), exp: L(R.exp), veh: VEH[A] + (VEH[Math.min(Bh, C.n - 1)] - VEH[A]) * (h1 === 0 ? 0 : u), sun: (DATA.pv[A] + (DATA.pv[Math.min(Bh, C.n - 1)] - DATA.pv[A]) * (h1 === 0 ? 0 : u)) / 677 }; }
+
+function drawScene(dt) {
+  const v = hourVals(st.t), light = Math.min(1, Math.pow(v.sun, .6) * 1.15);
+  const W = cv.width, H = cv.height;
+  ctx.fillStyle = mix(T.ng, T.dg, light); ctx.fillRect(0, 0, W, H);
+  // sky glow from the south-east corner by day
+  if (light > 0.02) { const g = ctx.createRadialGradient(W * .85, H * .05, 10, W * .85, H * .05, W * .9); g.addColorStop(0, `rgba(255,214,140,${.35 * light})`); g.addColorStop(1, 'rgba(255,214,140,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  // roads
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = mix(T.nr, T.dr, light); ctx.lineWidth = 9 * S;
+  NET.paths.forEach(pa => { ctx.beginPath(); pa.p.forEach((q, j) => { const [x, y] = P(q[0], q[1]); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); });
+  // strips glow with current demand
+  const intensity = R.peak > 0 ? Math.min(1, v.dem / R.peak) : 0;
+  ctx.save(); ctx.strokeStyle = T.strip; ctx.shadowColor = T.strip; ctx.shadowBlur = 6 + 22 * intensity; ctx.globalAlpha = .35 + .65 * intensity; ctx.lineWidth = 3.2 * S;
+  ctx.beginPath(); SEGS[st.layout].forEach(([a, b]) => { const A = P(a[0], a[1]), Bq = P(b[0], b[1]); ctx.moveTo(A[0], A[1]); ctx.lineTo(Bq[0], Bq[1]); }); ctx.stroke(); ctx.restore();
+  // PV array to scale (representative position)
+  const side = Math.sqrt(R.area) / NET.m_per_px, ax = B[0] + 20, ay = B[3] - side - 4, [px, py] = P(ax, ay);
+  ctx.fillStyle = T.pv; ctx.globalAlpha = .35 + .65 * Math.min(1, v.sun * 1.4); ctx.fillRect(px, py, side * S, side * S); ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; for (let k = 1; k < 4; k++) { const yy = py + side * S * k / 4; ctx.beginPath(); ctx.moveTo(px, yy); ctx.lineTo(px + side * S, yy); ctx.stroke(); }
+  ctx.fillStyle = light > .5 ? 'rgba(20,32,26,.85)' : 'rgba(255,255,255,.85)'; ctx.font = `500 ${Math.round(24 * S)}px "IBM Plex Mono", monospace`;
+  ctx.fillText(`PV ${fmt(R.kWp, 1)} kWp · ${fmt(R.area, 0)} m²`, px + side * S + 10, py + side * S - 4);
+  // scale bar
+  const [sbx, sby] = P(B[2] - 100 / NET.m_per_px - 10, B[3] + 30); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sbx, sby); ctx.lineTo(sbx + 100 / NET.m_per_px * S, sby); ctx.stroke();
+  ctx.fillText('100 m', sbx, sby - 8);
+  // cars: count follows the hour's traffic
+  const target = Math.round(v.veh / DATA.peak * 34);
+  while (cars.length < target) cars.push(spawn()); if (cars.length > target) cars.length = target;
+  const strips = st.layout === 'full' ? 'f' : 's';
+  cars.forEach(c => { stepCar(c, dt); const pa = NET.paths[c.i], q = posOn(pa, c.s), [x, y] = P(q.x, q.y), isEV = c.ev < st.share, on = isEV && pa[strips][q.j];
+    if (on) { ctx.save(); ctx.shadowColor = T.strip; ctx.shadowBlur = 16; ctx.fillStyle = T.strip; ctx.beginPath(); ctx.arc(x, y, 9 * S, 0, 7); ctx.fill(); ctx.restore(); }
+    ctx.fillStyle = isEV ? '#ffffff' : T.car; ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y, 5.2 * S, 0, 7); ctx.fill(); ctx.stroke(); });
+  $('maptag').textContent = `${String(Math.floor(st.t)).padStart(2, '0')}:${String(Math.floor((st.t % 1) * 60)).padStart(2, '0')} · ${Math.round(v.veh * st.share)} EV/sa · şerit gücü %${Math.round(intensity * 100)}`;
+}
+
+function drawLive() {
+  const v = hourVals(st.t);
+  $('clock').textContent = `${String(Math.floor(st.t)).padStart(2, '0')}:${String(Math.floor((st.t % 1) * 60)).padStart(2, '0')}`;
+  $('time').value = st.t;
+  $('r-pv').textContent = fmt(v.pv, 1) + ' kW';
+  $('r-need').textContent = fmt(v.dem, 1) + ' kW';
+  $('r-soc').textContent = st.days ? '%' + fmt(v.soc * 100, 0) : 'yok';
+  const net = v.imp - v.exp;
+  $('r-grid').textContent = (net >= 0 ? '↓ ' : '↑ ') + fmt(Math.abs(net), 1) + ' kW';
+  let s;
+  if (v.dem < 0.05 && v.pv < 0.05) s = 'Gece: trafik çok az, şeritler neredeyse boşta.';
+  else if (v.pv >= v.dem) s = `PV ihtiyacın tamamını karşılıyor; fazla ${fmt(v.pv - v.dem, 1)} kW ` + (st.days && v.soc < .999 ? 'depolamaya gidiyor.' : 'şebekeye veriliyor.');
+  else if (v.imp < 0.05) s = v.pv < 0.05 ? `Güneş yok; ihtiyacın tamamı (${fmt(v.dem, 1)} kW) depolamadan karşılanıyor.` : `PV yetmiyor; açık ${fmt(v.dem - v.pv, 1)} kW depolamadan karşılanıyor.`;
+  else if (v.pv < 0.05) s = `Güneş yok; ${fmt(v.imp, 1)} kW şebekeden alınıyor` + (v.dem - v.imp > 0.05 ? `, ${fmt(v.dem - v.imp, 1)} kW depolamadan geliyor.` : '.');
+  else s = `PV yetmiyor: ihtiyacın şu an PV ile karşılanan payı %${fmt(v.dem ? Math.min(v.pv, v.dem) / v.dem * 100 : 0, 0)}, eksik ${fmt(v.imp, 1)} kW şebekeden alınıyor.`;
+  $('flow').textContent = s;
+  if (dayCursor && daySvg._X) { const x = daySvg._X(Math.min(23, st.t)); dayCursor.setAttribute('x1', x); dayCursor.setAttribute('x2', x); }
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (st.playing) { st.t = (st.t + dt * 0.9) % 24; drawLive(); }
+  drawScene(st.playing || !reduce ? dt : 0);
+  requestAnimationFrame(frame);
+}
+
+function retheme() { readTokens(); if (R) { drawMonthly(); drawYear(); drawDay(); drawLive(); } }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
+new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+readTokens(); syncSeg(); setPlaying(st.playing); recompute();
+requestAnimationFrame(frame);
+})();
+</script>
