@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this model, please cite it as below."
+title: "pv-dwpt-campus: hourly matching of photovoltaic generation and dynamic wireless charging demand on a university campus"
+type: software
+authors:
+  - family-names: "Akıskalıoğlu"
+    given-names: "Emre"
+    orcid: "https://orcid.org/0000-0002-8264-2087"
+    affiliation: "Marmara University, Faculty of Technology, Department of Mechanical Engineering"
+version: "1.0.0"
+date-released: "2026-11-26"
+license: MIT
+keywords:
+  - dynamic wireless charging
+  - photovoltaics
+  - self-sufficiency
+  - SUMO
+  - campus mobility
