@@ -130,9 +130,9 @@ charging strips are ignored; within-hour power peaks are averaged out.
 - Ekici, B. B. (2016). Variation of photovoltaic system performance due to climatic and
   geographical conditions in Turkey. *Turkish Journal of Electrical Engineering & Computer
   Sciences, 24*(6), 4693–4706. https://doi.org/10.3906/elk-1404-341
-- Hay, J. E., & Davies, J. A. (1980). Calculation of the solar radiation incident on an inclined
+- Hay, J. E., & Davies, J. A. (1980). Calculations of the solar radiation incident on an inclined
   surface. In J. E. Hay & T. K. Won (Eds.), *Proceedings of the First Canadian Solar Radiation
-  Data Workshop* (pp. 59–72). Ministry of Supply and Services Canada.
+  Data Workshop* (p. 59). Ministry of Supply and Services Canada.
 - Holmgren, W. F., Hansen, C. W., & Mikofski, M. A. (2018). pvlib python: A python package for
   modeling solar energy systems. *Journal of Open Source Software, 3*(29), 884.
 
